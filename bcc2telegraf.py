@@ -68,18 +68,18 @@ def _send_log2_hist(output,current_time, vals, val_type, strip_leading_zero,buck
         if v > 0: idx_max = i
         if v > val_max: val_max = v
 
-# bcc/ebpf creates log2 histograms but telegraf/prometheus/grafana require cumulative histogram with each bucket starting from 0
-# so we have to add all counts from lower buckets to current one
+    # bcc/ebpf creates log2 histograms but telegraf/prometheus/grafana require cumulative histogram with each bucket starting from 0
+    # so we have to add all counts from lower buckets to current one
     cumulative = 0
     for i in range(1, idx_max + 1):
         low = (1 << i) >> 1
         high = (1 << i) - 1
-        if (low == high):
+        if low == high:
             low -= 1
         val = vals[i]+cumulative
         cumulative=val
         
-#  ignore strip_leading_zero - never send zero counts to telegraf
+        #  ignore strip_leading_zero - never send zero counts to telegraf
         if val:
                 print(telegraf_line_format % (grafana_namespace, this_module, localhost_fqdn, this_datacenter, bucket, high, val, current_time), file=output)
 
@@ -105,19 +105,19 @@ def send_log2_hist(self, val_type="value", section_header="tag1",
 
             for k, v in self.items():
                 bucket = getattr(k, f1)
-                if ((filter_list) and bucket in filter_list) or not filter_list:
+                if (filter_list and bucket in filter_list) or not filter_list:
                     if bucket_fn:
                         bucket = bucket_fn(bucket)
                     vals = tmp[bucket] = tmp.get(bucket, [0] * log2_index_max)
                     slot = getattr(k, f2)
                     vals[slot] = v.value
-# debug
-#                else:
-#                    print(bucket)
+            #  debug
+            #  else:
+            #      print(bucket)
 
             buckets = list(tmp.keys())
            
-# send to telegraf unsorted, ignore bucket_sort_fn
+            #  send to telegraf unsorted, ignore bucket_sort_fn
 
             for bucket in buckets:
                 vals = tmp[bucket]
@@ -131,8 +131,8 @@ def send_log2_hist(self, val_type="value", section_header="tag1",
         contents = output.getvalue()
         output.close()
         print(contents,end="")
-	response = requests.post(telegraf_url,headers=telegraf_headers,data=contents)
-        print(response)	  
+        response = requests.post(telegraf_url,headers=telegraf_headers,data=contents)
+        print(response)
 
 
 bcc.table.TableBase.send_log2_hist = send_log2_hist

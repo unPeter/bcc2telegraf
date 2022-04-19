@@ -59,7 +59,7 @@ telegraf_url=os.environ.get('TELEGRAF_URL', 'http://127.0.0.1:8086/write')
 telegraf_headers = {'Content-Type': 'text/plain; charset=utf-8','User-Agent': 'Mozilla 5.x'} 
 log2_index_max=bcc.table.log2_index_max
 
-def _send_log2_hist(output,current_time, vals, val_type, strip_leading_zero,bucket='all'):
+def _send_log2_hist(output,current_time, vals, val_type, strip_leading_zero,bucket='all',cumulative_hist=None):
     log2_dist_max = 64
     idx_max = -1
     val_max = 0
@@ -68,15 +68,17 @@ def _send_log2_hist(output,current_time, vals, val_type, strip_leading_zero,buck
         if v > 0: idx_max = i
         if v > val_max: val_max = v
 
-    # bcc/ebpf creates log2 histograms but telegraf/prometheus/grafana require cumulative histogram with each bucket starting from 0
-    # so we have to add all counts from lower buckets to current one
+    # bcc/ebpf creates log2 histograms 
+    # some tools may require cumulative histograms, where each bucket starts with 0
     cumulative = 0
     for i in range(1, idx_max + 1):
         low = (1 << i) >> 1
         high = (1 << i) - 1
         if low == high:
             low -= 1
-        val = vals[i]+cumulative
+        val = vals[i]
+        if cumulative_hist
+            val = val + cumulative
         cumulative=val
         
         #  ignore strip_leading_zero - never send zero counts to telegraf
@@ -85,7 +87,7 @@ def _send_log2_hist(output,current_time, vals, val_type, strip_leading_zero,buck
 
 def send_log2_hist(self, val_type="value", section_header="tag1",
             section_print_fn=None, bucket_fn=None, strip_leading_zero=None,
-            bucket_sort_fn=None, filter_list=None):
+            bucket_sort_fn=None, filter_list=None, cumulative_hist=None):
         
         output = StringIO('')
         current_time = int(time.time())

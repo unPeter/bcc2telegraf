@@ -77,7 +77,7 @@ def _send_log2_hist(output,current_time, vals, val_type, strip_leading_zero,buck
         if low == high:
             low -= 1
         val = vals[i]
-        if cumulative_hist
+        if cumulative_hist:
             val = val + cumulative
         cumulative=val
         

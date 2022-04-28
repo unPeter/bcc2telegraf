@@ -123,12 +123,12 @@ def send_log2_hist(self, val_type="value", section_header="tag1",
 
             for bucket in buckets:
                 vals = tmp[bucket]
-                _send_log2_hist(output, current_time, vals, val_type, strip_leading_zero, bucket)
+                _send_log2_hist(output, current_time, vals, val_type, strip_leading_zero, bucket, cumulative_hist)
         else:
             vals = [0] * log2_index_max
             for k, v in self.items():
                 vals[k.value] = v.value
-            _send_log2_hist(output, current_time, vals, val_type, strip_leading_zero)
+            _send_log2_hist(output, current_time, vals, val_type, strip_leading_zero, cumulative_hist)
 
         contents = output.getvalue()
         output.close()
